@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificação necessária — HBU</title>
+  <style>
+    body {
+      background: #000;
+      color: #eee;
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #111;
+      border-radius: 14px;
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 10px; }
+    p { color: #aaa; font-size: 0.95rem; }
+    .msg { color: #4ade80; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Verificação necessária</h1>
+    <p>Confirme que você é humana para continuar.</p>
+    <div id="captcha"></div>
+    <p class="msg" id="msg"></p>
+  </div>
+
+  <script>
+    /*
+     * Esta é a "porta" do CAPTCHA.
+     *
+     * O HBU vem com o CAPTCHA DESLIGADO, então esta página apenas encaminha
+     * para o painel (/blog.html). Para exigir CAPTCHA:
+     *
+     *   1. suba o servidor com HBU_CAPTCHA_ENABLED=1 e as URLs do seu provedor
+     *      (veja requireCaptcha.js);
+     *   2. aqui, carregue o widget do provedor e, no callback com o token,
+     *      grave o cookie esperado (HBU_CAPTCHA_COOKIE, padrão "captcha_token")
+     *      e redirecione para /blog.html.
+     */
+    window.location.href = '/blog.html';
+  </script>
+</body>
+</html>

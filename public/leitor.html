@@ -1,0 +1,1859 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leitor HDAP</title>
+    <meta name="color-scheme" content="dark" />
+    <style>
+      :root {
+        --bg: #05040a;
+        --bg-2: #0a0713;
+        --accent: #8b5cf6;
+        --accent-2: #a78bfa;
+        --accent-3: #c4b5fd;
+        --text: #ece9f6;
+        --muted: #9b96b3;
+        --card: rgba(255, 255, 255, 0.035);
+        --card-2: rgba(255, 255, 255, 0.06);
+        --border: rgba(139, 92, 246, 0.2);
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --danger: #fb7185;
+        --ok: #34d399;
+        --radius: 18px;
+        --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          Roboto, Helvetica, Arial, sans-serif;
+        --mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        color: var(--text);
+        background: var(--bg);
+        overflow-x: hidden;
+      }
+
+      /* Fundo: orbes roxos + grade de pontos */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background:
+          radial-gradient(
+            60rem 60rem at 12% -10%,
+            rgba(139, 92, 246, 0.22),
+            transparent 60%
+          ),
+          radial-gradient(
+            48rem 48rem at 95% 8%,
+            rgba(167, 139, 250, 0.16),
+            transparent 55%
+          ),
+          radial-gradient(
+            55rem 55rem at 50% 120%,
+            rgba(109, 40, 217, 0.2),
+            transparent 60%
+          ),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-image: radial-gradient(
+          rgba(196, 181, 253, 0.14) 1px,
+          transparent 1px
+        );
+        background-size: 26px 26px;
+        mask-image: radial-gradient(80rem 60rem at 50% 0%, #000 20%, transparent 75%);
+        -webkit-mask-image: radial-gradient(
+          80rem 60rem at 50% 0%,
+          #000 20%,
+          transparent 75%
+        );
+      }
+
+      a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent-3);
+      }
+
+      .wrap {
+        width: min(1100px, 100% - 2rem);
+        margin-inline: auto;
+      }
+
+      /* ---------- Header ---------- */
+      header.top {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(5, 4, 10, 0.72);
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .top-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.85rem 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .brand .mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--accent), #6d28d9);
+        box-shadow: 0 8px 24px -8px rgba(139, 92, 246, 0.9);
+        font-size: 0.85rem;
+        color: #fff;
+      }
+      .brand .name {
+        background: linear-gradient(90deg, #fff, var(--accent-3));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: 1.05rem;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font: inherit;
+        font-size: 0.86rem;
+        font-weight: 600;
+        padding: 0.5rem 0.85rem;
+        border-radius: 11px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: 0.18s ease;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: var(--card-2);
+        border-color: var(--accent);
+        transform: translateY(-1px);
+      }
+      .btn.primary {
+        background: linear-gradient(135deg, var(--accent), #6d28d9);
+        border-color: transparent;
+        box-shadow: 0 10px 30px -12px rgba(139, 92, 246, 0.9);
+        color: #fff;
+      }
+      .btn.primary:hover {
+        filter: brightness(1.08);
+      }
+      .btn.ghost {
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+      }
+      .btn.ghost:hover {
+        color: var(--text);
+        background: var(--card);
+      }
+      .btn.danger {
+        border-color: rgba(251, 113, 133, 0.4);
+        color: var(--danger);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn.sm {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.78rem;
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        padding: 3.4rem 0 2rem;
+      }
+      .hero h1 {
+        margin: 0 0 0.6rem;
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        background: linear-gradient(120deg, #fff 10%, var(--accent-3) 55%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero p {
+        margin: 0;
+        max-width: 60ch;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+      .hero .meta-line {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .pill {
+        font-size: 0.74rem;
+        font-weight: 600;
+        padding: 0.28rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--accent-3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      .pill.plain {
+        color: var(--muted);
+        border-color: var(--border-soft);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--ok);
+        box-shadow: 0 0 10px var(--ok);
+      }
+      .dot.off {
+        background: var(--danger);
+        box-shadow: 0 0 10px var(--danger);
+      }
+
+      /* ---------- Toolbar ---------- */
+      .toolbar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 1.4rem 0 1.6rem;
+      }
+      .search {
+        flex: 1 1 260px;
+        position: relative;
+      }
+      .search input {
+        width: 100%;
+        padding: 0.7rem 0.9rem 0.7rem 2.3rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-soft);
+        background: var(--card);
+        color: var(--text);
+        font: inherit;
+        outline: none;
+        transition: 0.18s;
+      }
+      .search input:focus {
+        border-color: var(--accent);
+        background: var(--card-2);
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.14);
+      }
+      .search svg {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: var(--muted);
+      }
+      .chips {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+      .chip {
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid var(--border-soft);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        transition: 0.16s;
+      }
+      .chip:hover {
+        color: var(--text);
+        border-color: var(--accent);
+      }
+      .chip.active {
+        background: rgba(139, 92, 246, 0.16);
+        border-color: var(--accent);
+        color: var(--accent-3);
+      }
+
+      /* ---------- Grid de artigos ---------- */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+        padding-bottom: 4rem;
+      }
+      .card {
+        position: relative;
+        border: 1px solid var(--border-soft);
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        cursor: pointer;
+        transition: 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        overflow: hidden;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(140deg, rgba(139, 92, 246, 0.6), transparent 45%);
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: 0.2s;
+        pointer-events: none;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        background: var(--card-2);
+        box-shadow: 0 24px 50px -30px rgba(139, 92, 246, 0.9);
+      }
+      .card:hover::before {
+        opacity: 1;
+      }
+      .card .id {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--accent-2);
+        opacity: 0.8;
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card .foot {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.74rem;
+        color: var(--muted);
+        flex-wrap: wrap;
+      }
+      .card .cats {
+        display: flex;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+      }
+      .cat {
+        font-size: 0.68rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(139, 92, 246, 0.14);
+        color: var(--accent-3);
+        border: 1px solid rgba(139, 92, 246, 0.22);
+      }
+
+      .empty,
+      .loading-block {
+        text-align: center;
+        padding: 4rem 1rem;
+        color: var(--muted);
+      }
+      .spinner {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 3px solid rgba(139, 92, 246, 0.25);
+        border-top-color: var(--accent-2);
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 1rem;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ---------- Painéis (artigo / editor / config) ---------- */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgba(3, 2, 8, 0.72);
+        backdrop-filter: blur(6px);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        overflow-y: auto;
+        padding: 2rem 1rem;
+        animation: fade 0.18s ease;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .panel {
+        width: min(860px, 100%);
+        background: linear-gradient(180deg, rgba(20, 14, 36, 0.96), rgba(8, 6, 16, 0.98));
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 40px 90px -40px rgba(139, 92, 246, 0.8);
+        animation: rise 0.22s ease;
+      }
+      @keyframes rise {
+        from {
+          transform: translateY(14px);
+          opacity: 0;
+        }
+        to {
+          transform: none;
+          opacity: 1;
+        }
+      }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-soft);
+        position: sticky;
+        top: 0;
+        background: rgba(12, 8, 24, 0.94);
+        backdrop-filter: blur(10px);
+        border-radius: 22px 22px 0 0;
+        z-index: 2;
+      }
+      .panel-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .panel-body {
+        padding: 1.4rem 1.25rem 1.8rem;
+      }
+
+      /* ---------- Artigo ---------- */
+      .article-meta {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        align-items: center;
+        color: var(--muted);
+        font-size: 0.82rem;
+        margin-bottom: 1rem;
+      }
+      .prose {
+        font-size: 1.03rem;
+        line-height: 1.75;
+        color: #ddd8ee;
+        word-wrap: break-word;
+      }
+      .prose h1,
+      .prose h2,
+      .prose h3,
+      .prose h4 {
+        color: #fff;
+        line-height: 1.25;
+        margin: 1.6rem 0 0.6rem;
+        letter-spacing: -0.01em;
+      }
+      .prose h1 {
+        font-size: 1.7rem;
+      }
+      .prose h2 {
+        font-size: 1.4rem;
+      }
+      .prose h3 {
+        font-size: 1.18rem;
+      }
+      .prose p {
+        margin: 0.9rem 0;
+      }
+      .prose a {
+        color: var(--accent-2);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .prose strong {
+        color: #fff;
+      }
+      .prose ul,
+      .prose ol {
+        padding-left: 1.3rem;
+        margin: 0.9rem 0;
+      }
+      .prose li {
+        margin: 0.3rem 0;
+      }
+      .prose blockquote {
+        margin: 1.1rem 0;
+        padding: 0.4rem 1rem;
+        border-left: 3px solid var(--accent);
+        background: rgba(139, 92, 246, 0.08);
+        border-radius: 0 12px 12px 0;
+        color: var(--accent-3);
+        font-style: italic;
+      }
+      .prose code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        background: rgba(139, 92, 246, 0.16);
+        color: var(--accent-3);
+        padding: 0.12rem 0.4rem;
+        border-radius: 6px;
+      }
+      .prose pre {
+        background: #0c0918;
+        border: 1px solid var(--border-soft);
+        border-radius: 14px;
+        padding: 1rem;
+        overflow-x: auto;
+        position: relative;
+      }
+      .prose pre code {
+        background: transparent;
+        color: #cfc7ee;
+        padding: 0;
+        font-size: 0.86rem;
+      }
+      .prose img {
+        max-width: 100%;
+        border-radius: 14px;
+        margin: 1rem 0;
+      }
+      .prose hr {
+        border: none;
+        border-top: 1px solid var(--border-soft);
+        margin: 1.8rem 0;
+      }
+      .prose .task {
+        list-style: none;
+        margin-left: -1rem;
+      }
+      .prose .task input {
+        accent-color: var(--accent);
+        margin-right: 0.4rem;
+      }
+      .prose .arrow {
+        color: var(--accent-2);
+        font-weight: 700;
+      }
+
+      /* ---------- Formulários ---------- */
+      .field {
+        margin-bottom: 1rem;
+      }
+      .field label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--accent-3);
+        margin-bottom: 0.35rem;
+      }
+      .field .hint {
+        font-size: 0.74rem;
+        color: var(--muted);
+        margin-top: 0.3rem;
+        line-height: 1.45;
+      }
+      input[type="text"],
+      input[type="number"],
+      input[type="password"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 0.62rem 0.75rem;
+        border-radius: 11px;
+        border: 1px solid var(--border-soft);
+        background: var(--card);
+        color: var(--text);
+        font: inherit;
+        outline: none;
+        transition: 0.16s;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 220px;
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--accent);
+        background: var(--card-2);
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.13);
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.9rem;
+      }
+      @media (max-width: 620px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.86rem;
+        color: var(--text);
+        cursor: pointer;
+        user-select: none;
+      }
+      .check input {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
+      }
+      fieldset {
+        border: 1px solid var(--border-soft);
+        border-radius: 14px;
+        padding: 1rem 1rem 0.4rem;
+        margin: 0 0 1.2rem;
+      }
+      legend {
+        padding: 0 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-2);
+      }
+      .actions {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 1.2rem;
+      }
+      .status-box {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.6;
+        background: #0a0716;
+        border: 1px solid var(--border-soft);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--muted);
+        max-height: 260px;
+        overflow: auto;
+      }
+      .status-box .k {
+        color: var(--accent-2);
+      }
+      .status-box .v {
+        color: #ddd8ee;
+      }
+      .status-box .ok {
+        color: var(--ok);
+      }
+      .status-box .bad {
+        color: var(--danger);
+      }
+
+      /* ---------- Toasts ---------- */
+      #toasts {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-width: min(360px, 90vw);
+      }
+      .toast {
+        border-radius: 13px;
+        padding: 0.8rem 1rem;
+        font-size: 0.86rem;
+        border: 1px solid var(--border);
+        background: rgba(20, 14, 36, 0.96);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.9);
+        animation: rise 0.2s ease;
+        line-height: 1.45;
+      }
+      .toast.ok {
+        border-color: rgba(52, 211, 153, 0.5);
+      }
+      .toast.err {
+        border-color: rgba(251, 113, 133, 0.5);
+      }
+      .toast .t-title {
+        font-weight: 700;
+        margin-bottom: 0.15rem;
+      }
+      .toast.ok .t-title {
+        color: var(--ok);
+      }
+      .toast.err .t-title {
+        color: var(--danger);
+      }
+
+      footer.bottom {
+        border-top: 1px solid var(--border-soft);
+        padding: 1.6rem 0 2.4rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+        flex-wrap: wrap;
+      }
+      .tab {
+        padding: 0.45rem 0.85rem;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent;
+        color: var(--muted);
+        background: transparent;
+      }
+      .tab:hover {
+        color: var(--text);
+      }
+      .tab.active {
+        color: var(--accent-3);
+        background: rgba(139, 92, 246, 0.14);
+        border-color: var(--border);
+      }
+      .hide {
+        display: none !important;
+      }
+      .spin-inline {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap top-inner">
+        <div class="brand">
+          <span class="mark">HBU</span>
+          <span class="name" id="brandName">Leitor HDAP</span>
+        </div>
+        <nav class="nav">
+          <button class="btn ghost sm" id="btnRefresh" title="Atualizar artigos">
+            ⟳ Atualizar
+          </button>
+          <a class="btn sm" id="btnBloggy" href="/blog.html">Ir para o BloggySource</a>
+          <button class="btn sm hide" id="btnNew">＋ Novo artigo</button>
+          <button class="btn sm hide" id="btnSettings">⚙ Configurações</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="hero">
+        <h1 id="heroTitle">Artigos publicados na rede HDAP</h1>
+        <p id="heroDesc">
+          Lendo diretamente da rede HDAP. Carregando…
+        </p>
+        <div class="meta-line" id="heroMeta"></div>
+      </section>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Buscar por título, descrição ou conteúdo…"
+            autocomplete="off"
+          />
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div id="content"></div>
+    </main>
+
+    <footer class="bottom wrap">
+      <span id="footLeft">HBU — Hdap Blog Utility</span>
+      <span id="footRight"></span>
+    </footer>
+
+    <div id="modalRoot"></div>
+    <div id="toasts"></div>
+
+    <script>
+      /* ============================================================
+       * Estado
+       * ============================================================ */
+      const state = {
+        meta: null,
+        user: null,
+        csrfToken: "",
+        articles: [],
+        filter: "",
+        category: null,
+        loading: true,
+        error: null,
+        view: null, // { type: 'article'|'editor'|'settings', ... }
+        settingsTab: "connection",
+        status: null,
+      };
+
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+      const esc = (s) =>
+        String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+
+      /* ============================================================
+       * Markdown (seguro e com tema roxo)
+       * ============================================================ */
+      function mdInline(text) {
+        let s = esc(text);
+        const codes = [];
+        s = s.replace(/`([^`]+)`/g, (m, c) => {
+          codes.push(c);
+          return "\u0000" + (codes.length - 1) + "\u0000";
+        });
+        s = s.replace(
+          /!\[([^\]]*)\]\(([^)\s]+)\)/g,
+          '<img src="$2" alt="$1" loading="lazy">',
+        );
+        s = s.replace(
+          /\[([^\]]+)\]\(([^)\s]+)\)/g,
+          '<a href="$2" target="_blank" rel="noopener">$1</a>',
+        );
+        s = s.replace(/(?:--&gt;|-&gt;)\s/g, '<span class="arrow">→</span> ');
+        s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        s = s.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+        s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+        s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+        s = s.replace(/\u0000(\d+)\u0000/g, (m, i) => `<code>${codes[i]}</code>`);
+        return s;
+      }
+
+      function mdToHtml(src) {
+        const text = String(src || "").replace(/\r\n/g, "\n");
+        const parts = text.split(/```/);
+        let html = "";
+        parts.forEach((part, i) => {
+          if (i % 2 === 1) {
+            const nl = part.indexOf("\n");
+            let lang = "";
+            let code = part;
+            if (nl >= 0) {
+              lang = part.slice(0, nl).trim();
+              code = part.slice(nl + 1);
+            }
+            html += `<pre data-lang="${esc(lang)}"><code>${esc(
+              code.replace(/\n$/, ""),
+            )}</code></pre>`;
+            return;
+          }
+          html += renderBlocks(part);
+        });
+        return html;
+      }
+
+      function renderBlocks(text) {
+        const lines = text.split("\n");
+        let out = "";
+        let para = [];
+        let list = null;
+        let listType = "ul";
+        const flushPara = () => {
+          if (para.length) {
+            out += `<p>${mdInline(para.join("\n")).replace(/\n/g, "<br>")}</p>`;
+            para = [];
+          }
+        };
+        const flushList = () => {
+          if (list) {
+            out += `<${listType}>${list.join("")}</${listType}>`;
+            list = null;
+          }
+        };
+        for (const line of lines) {
+          if (!line.trim()) {
+            flushPara();
+            flushList();
+            continue;
+          }
+          let m;
+          if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+            flushPara();
+            flushList();
+            const lvl = m[1].length;
+            out += `<h${lvl}>${mdInline(m[2])}</h${lvl}>`;
+            continue;
+          }
+          if (/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)) {
+            flushPara();
+            flushList();
+            out += "<hr>";
+            continue;
+          }
+          if ((m = line.match(/^>\s?(.*)$/))) {
+            flushPara();
+            flushList();
+            out += `<blockquote>${mdInline(m[1])}</blockquote>`;
+            continue;
+          }
+          if ((m = line.match(/^[-*]\s+\[([ xX])\]\s+(.*)$/))) {
+            flushPara();
+            listType = "ul";
+            if (!list) list = [];
+            list.push(
+              `<li class="task"><input type="checkbox" disabled ${
+                m[1].toLowerCase() === "x" ? "checked" : ""
+              }> ${mdInline(m[2])}</li>`,
+            );
+            continue;
+          }
+          if ((m = line.match(/^[-*]\s+(.*)$/))) {
+            flushPara();
+            listType = "ul";
+            if (!list) list = [];
+            list.push(`<li>${mdInline(m[1])}</li>`);
+            continue;
+          }
+          if ((m = line.match(/^\d+\.\s+(.*)$/))) {
+            flushPara();
+            listType = "ol";
+            if (!list) list = [];
+            list.push(`<li>${mdInline(m[1])}</li>`);
+            continue;
+          }
+          flushList();
+          para.push(line);
+        }
+        flushPara();
+        flushList();
+        return out;
+      }
+
+      /* ============================================================
+       * API
+       * ============================================================ */
+      async function api(url, options = {}) {
+        const opts = { credentials: "include", ...options };
+        opts.headers = { ...(options.headers || {}) };
+        if (opts.body && !opts.headers["Content-Type"]) {
+          opts.headers["Content-Type"] = "application/json";
+        }
+        if (state.csrfToken && opts.method && opts.method !== "GET") {
+          opts.headers["X-CSRF-Token"] = state.csrfToken;
+        }
+        const res = await fetch(url, opts);
+        const ct = res.headers.get("content-type") || "";
+        let data = null;
+        if (ct.includes("application/json")) {
+          data = await res.json().catch(() => null);
+        }
+        if (!res.ok) {
+          const msg =
+            (data && data.error) ||
+            (res.status === 403 ? "Acesso negado" : `Erro ${res.status}`);
+          const err = new Error(msg);
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      }
+
+      /* ============================================================
+       * Toasts
+       * ============================================================ */
+      function toast(title, msg = "", kind = "") {
+        const el = document.createElement("div");
+        el.className = "toast " + kind;
+        el.innerHTML = `<div class="t-title">${esc(title)}</div>${
+          msg ? `<div>${esc(msg)}</div>` : ""
+        }`;
+        $("#toasts").appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = "0";
+          el.style.transition = "opacity .3s";
+          setTimeout(() => el.remove(), 300);
+        }, kind === "err" ? 6500 : 4200);
+      }
+
+      /* ============================================================
+       * Render principal
+       * ============================================================ */
+      function renderHero() {
+        const m = state.meta || {};
+        $("#brandName").textContent = m.siteTitle || "Leitor HDAP";
+        document.title = (m.siteTitle || "Leitor HDAP") + " — HDAP";
+        $("#heroTitle").textContent =
+          m.siteTitle || "Artigos publicados na rede HDAP";
+        $("#heroDesc").textContent =
+          m.siteDescription ||
+          "Lendo diretamente da rede HDAP através do hdap-cli.";
+        const node = m.node || {};
+        const reachable = state.status && state.status.node
+          ? state.status.node.reachable
+          : null;
+        const pills = [];
+        pills.push(
+          `<span class="pill plain">${esc(node.host || "?")}:${esc(
+            node.port || "",
+          )}</span>`,
+        );
+        if (m.owner)
+          pills.push(
+            `<span class="pill plain">@${esc(String(m.owner).split("_")[0])}</span>`,
+          );
+        pills.push(
+          `<span class="pill"><span class="dot ${
+            reachable === false ? "off" : ""
+          }"></span>${reachable === false ? "nó offline" : "rede HDAP"}</span>`,
+        );
+        pills.push(
+          `<span class="pill plain">${state.articles.length} artigo(s)</span>`,
+        );
+        if (state.user && state.user.isAdmin)
+          pills.push(`<span class="pill">admin: ${esc(state.user.username)}</span>`);
+        $("#heroMeta").innerHTML = pills.join("");
+      }
+
+      function categoriesOf(articles) {
+        const set = new Set();
+        for (const a of articles)
+          for (const c of a.categories || []) set.add(c);
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+      }
+
+      function renderChips() {
+        const cats = categoriesOf(state.articles);
+        const chips = [
+          `<button class="chip ${
+            !state.category ? "active" : ""
+          }" data-cat="">Todas</button>`,
+        ];
+        for (const c of cats) {
+          chips.push(
+            `<button class="chip ${
+              state.category === c ? "active" : ""
+            }" data-cat="${esc(c)}">${esc(c)}</button>`,
+          );
+        }
+        $("#chips").innerHTML = chips.join("");
+      }
+
+      function filtered() {
+        const q = state.filter.trim().toLowerCase();
+        return state.articles.filter((a) => {
+          if (state.category && !(a.categories || []).includes(state.category))
+            return false;
+          if (!q) return true;
+          const hay = [
+            a.title,
+            a.description,
+            a.author,
+            (a.categories || []).join(" "),
+            a.content,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      function fmtDate(s) {
+        if (!s) return "";
+        const d = new Date(s);
+        if (isNaN(d.getTime())) return s;
+        return d.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+
+      function renderList() {
+        if (state.loading) {
+          $("#content").innerHTML =
+            '<div class="loading-block"><div class="spinner"></div>Carregando artigos da rede HDAP…</div>';
+          return;
+        }
+        if (state.error) {
+          $("#content").innerHTML = `<div class="empty">
+            <p style="font-size:1.05rem;color:#fb7185">Não foi possível carregar os artigos.</p>
+            <p>${esc(state.error)}</p>
+            <div class="actions" style="justify-content:center">
+              <button class="btn primary" data-act="reload">Tentar novamente</button>
+              <button class="btn hide" id="errSettings">Abrir configurações</button>
+            </div>
+          </div>`;
+          const es = $("#errSettings");
+          if (state.user && state.user.isAdmin) {
+            es.classList.remove("hide");
+            es.onclick = () => openSettings();
+          }
+          return;
+        }
+        const items = filtered();
+        if (!items.length) {
+          $("#content").innerHTML = `<div class="empty">
+            <p style="font-size:1.05rem">Nenhum artigo encontrado.</p>
+            <p>${
+              state.articles.length
+                ? "Tente ajustar a busca ou o filtro de categoria."
+                : "Publique um artigo para vê-lo aqui."
+            }</p>
+          </div>`;
+          return;
+        }
+        $("#content").innerHTML = `<div class="grid">${items
+          .map((a, i) => {
+            const desc = a.description || plain(a.content).slice(0, 220);
+            return `<article class="card" data-idx="${state.articles.indexOf(
+              a,
+            )}">
+              ${a.id != null ? `<span class="id">#${esc(a.id)}</span>` : ""}
+              <h3>${esc(a.title || a.file || "Sem título")}</h3>
+              ${desc ? `<p>${esc(desc)}</p>` : ""}
+              <div class="foot">
+                <div class="cats">${(a.categories || [])
+                  .slice(0, 3)
+                  .map((c) => `<span class="cat">${esc(c)}</span>`)
+                  .join("")}</div>
+                <span>${esc(fmtDate(a.publishedAt))}</span>
+              </div>
+              ${
+                a.error
+                  ? `<div class="foot"><span style="color:#fb7185">falha ao ler: ${esc(
+                      a.error,
+                    )}</span></div>`
+                  : ""
+              }
+            </article>`;
+          })
+          .join("")}</div>`;
+      }
+
+      function plain(md) {
+        return String(md || "")
+          .replace(/```[\s\S]*?```/g, " ")
+          .replace(/[#*_>`~\-]+/g, " ")
+          .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function render() {
+        renderHero();
+        renderChips();
+        renderList();
+      }
+
+      /* ============================================================
+       * Modal genérico
+       * ============================================================ */
+      function openModal(html) {
+        $("#modalRoot").innerHTML = `<div class="overlay"><div class="panel">${html}</div></div>`;
+        $(".overlay").addEventListener("click", (e) => {
+          if (e.target.classList.contains("overlay")) closeModal();
+        });
+      }
+      function closeModal() {
+        $("#modalRoot").innerHTML = "";
+        state.view = null;
+      }
+
+      /* ============================================================
+       * Artigo
+       * ============================================================ */
+      function openArticle(idx) {
+        const a = state.articles[idx];
+        if (!a) return;
+        state.view = { type: "article", idx };
+        const cats = (a.categories || [])
+          .map((c) => `<span class="cat">${esc(c)}</span>`)
+          .join(" ");
+        openModal(`
+          <div class="panel-head">
+            <h2>${esc(a.title || a.file || "Artigo")}</h2>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn sm hide" id="artEdit">✎ Editar</button>
+              <button class="btn ghost sm" data-close>✕</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="article-meta">
+              ${a.id != null ? `<span>#${esc(a.id)}</span>` : ""}
+              ${a.author ? `<span>por ${esc(a.author)}</span>` : ""}
+              ${a.publishedAt ? `<span>${esc(fmtDate(a.publishedAt))}</span>` : ""}
+              ${cats}
+            </div>
+            ${
+              a.description
+                ? `<p style="color:#a78bfa;font-style:italic;margin-top:0">${esc(
+                    a.description,
+                  )}</p>`
+                : ""
+            }
+            <div class="prose">${
+              a.content ? mdToHtml(a.content) : "<p>(sem conteúdo)</p>"
+            }</div>
+            <div class="actions">
+              <span style="color:#9b96b3;font-size:.78rem;font-family:var(--mono)">${esc(
+                a.path || "",
+              )}</span>
+            </div>
+          </div>
+        `);
+        const edit = $("#artEdit");
+        if (state.user && state.user.isAdmin) {
+          edit.classList.remove("hide");
+          edit.onclick = () => openEditor(a);
+        }
+      }
+
+      /* ============================================================
+       * Editor (publica direto no HDAP)
+       * ============================================================ */
+      function openEditor(article = null) {
+        const isNew = !article;
+        const a = article || {};
+        const cats = (a.categories || []).join(", ");
+        openModal(`
+          <div class="panel-head">
+            <h2>${isNew ? "Novo artigo no HDAP" : "Editar artigo"}</h2>
+            <button class="btn ghost sm" data-close>✕</button>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="field">
+                <label>ID</label>
+                <input type="number" id="edId" value="${
+                  a.id != null ? esc(a.id) : ""
+                }" placeholder="automático" ${!isNew ? "readonly" : ""} />
+                <div class="hint">O ID numérico do artigo (usado no nome do arquivo).</div>
+              </div>
+              <div class="field">
+                <label>Autor</label>
+                <input type="text" id="edAuthor" value="${esc(
+                  a.author || (state.user && state.user.username) || "",
+                )}" placeholder="Autor" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Título *</label>
+              <input type="text" id="edTitle" value="${esc(a.title || "")}" placeholder="Título do artigo" />
+            </div>
+            <div class="field">
+              <label>Descrição</label>
+              <input type="text" id="edDesc" value="${esc(
+                a.description || "",
+              )}" placeholder="Um resumo curto que aparece nos cartões" />
+            </div>
+            <div class="field">
+              <label>Categorias</label>
+              <input type="text" id="edCats" value="${esc(cats)}" placeholder="Filosofia, Reflexões, Tecnologia" />
+              <div class="hint">Separe por vírgulas.</div>
+            </div>
+            <div class="field">
+              <label>Conteúdo (Markdown) *</label>
+              <div class="tabs">
+                <button class="tab active" id="tabWrite">Escrever</button>
+                <button class="tab" id="tabPreview">Pré-visualizar</button>
+              </div>
+              <textarea id="edContent" placeholder="# Olá&#10;&#10;Escreva aqui em **Markdown**…">${esc(
+                a.content || "",
+              )}</textarea>
+              <div id="edPreview" class="prose hide" style="min-height:220px;border:1px solid var(--border-soft);border-radius:11px;padding:1rem"></div>
+            </div>
+            <div class="actions">
+              <button class="btn primary" id="edPublish">Publicar no HDAP</button>
+              ${
+                !isNew && a.file
+                  ? `<button class="btn danger" id="edDelete">Remover do HDAP</button>`
+                  : ""
+              }
+              <button class="btn ghost" data-close>Cancelar</button>
+            </div>
+            <div class="hint" style="margin-top:.8rem">
+              Isto grava direto na pasta <b>${esc(
+                (state.meta && state.meta.articlesPath) || "artigos",
+              )}</b> da rede HDAP, na mesma estrutura de arquivo usada pelo blog.
+            </div>
+          </div>
+        `);
+
+        const ta = $("#edContent");
+        $("#tabWrite").onclick = () => {
+          $("#tabWrite").classList.add("active");
+          $("#tabPreview").classList.remove("active");
+          ta.classList.remove("hide");
+          $("#edPreview").classList.add("hide");
+        };
+        $("#tabPreview").onclick = () => {
+          $("#tabPreview").classList.add("active");
+          $("#tabWrite").classList.remove("active");
+          ta.classList.add("hide");
+          const p = $("#edPreview");
+          p.classList.remove("hide");
+          p.innerHTML = mdToHtml(ta.value) || "<p>(vazio)</p>";
+        };
+
+        $("#edPublish").onclick = () => publishArticle(article, a);
+        const del = $("#edDelete");
+        if (del) del.onclick = () => deleteArticle(a);
+      }
+
+      async function publishArticle(original, existing) {
+        const title = $("#edTitle").value.trim();
+        const content = $("#edContent").value;
+        const description = $("#edDesc").value.trim();
+        const author = $("#edAuthor").value.trim();
+        const categories = $("#edCats")
+          .value.split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const idRaw = $("#edId").value.trim();
+
+        if (!title || !content.trim()) {
+          toast("Campos obrigatórios", "Título e conteúdo são necessários.", "err");
+          return;
+        }
+        const btn = $("#edPublish");
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spin-inline"></span> Publicando…';
+        try {
+          const payload = {
+            title,
+            content,
+            description,
+            author,
+            categories,
+          };
+          if (idRaw) payload.id = parseInt(idRaw, 10);
+          if (existing && existing.publishedAt)
+            payload.publishedAt = existing.publishedAt;
+          const r = await api("/api/hdap/publish", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          toast("Publicado no HDAP", `Artigo #${r.id} → ${r.file}`, "ok");
+          closeModal();
+          await loadArticles(true);
+        } catch (err) {
+          toast("Falha ao publicar", err.message, "err");
+          btn.disabled = false;
+          btn.textContent = "Publicar no HDAP";
+        }
+      }
+
+      async function deleteArticle(a) {
+        if (!a.file) return;
+        if (!confirm(`Remover "${a.title || a.file}" do HDAP?`)) return;
+        try {
+          await api(`/api/hdap/articles/${encodeURIComponent(a.file)}`, {
+            method: "DELETE",
+          });
+          toast("Artigo removido", a.file, "ok");
+          closeModal();
+          await loadArticles(true);
+        } catch (err) {
+          toast("Falha ao remover", err.message, "err");
+        }
+      }
+
+      /* ============================================================
+       * Configurações
+       * ============================================================ */
+      async function openSettings() {
+        openModal(`
+          <div class="panel-head">
+            <h2>Configurações</h2>
+            <button class="btn ghost sm" data-close>✕</button>
+          </div>
+          <div class="panel-body">
+            <div class="tabs">
+              <button class="tab active" data-stab="connection">Conexão</button>
+              <button class="tab" data-stab="identity">Identidade</button>
+              <button class="tab" data-stab="appearance">Aparência</button>
+              <button class="tab" data-stab="advanced">Avançado</button>
+            </div>
+            <div id="settingsBody"><div class="loading-block"><div class="spinner"></div>Carregando configuração…</div></div>
+          </div>
+        `);
+        $$("[data-stab]").forEach((t) => {
+          t.onclick = () => {
+            state.settingsTab = t.dataset.stab;
+            $$("[data-stab]").forEach((x) =>
+              x.classList.toggle("active", x === t),
+            );
+            renderSettings();
+          };
+        });
+        try {
+          const [cfgRes, statusRes] = await Promise.all([
+            api("/api/hdap/config"),
+            api("/api/hdap/status").catch((e) => ({ error: e.message })),
+          ]);
+          state.config = cfgRes.config;
+          state.defaults = cfgRes.defaults;
+          state.status = statusRes.status || null;
+          state.statusError = statusRes.error || null;
+        } catch (err) {
+          $("#settingsBody").innerHTML = `<div class="empty"><p style="color:#fb7185">${esc(
+            err.message,
+          )}</p></div>`;
+          return;
+        }
+        renderSettings();
+      }
+
+      function renderSettings() {
+        const c = state.config || {};
+        const s = state.status;
+        const body = $("#settingsBody");
+        if (state.settingsTab === "connection") {
+          body.innerHTML = `
+            <fieldset><legend>Servidor HDAP</legend>
+              <div class="row">
+                <div class="field"><label>Host</label>
+                  <input type="text" data-cfg="host" value="${esc(c.host || "")}" /></div>
+                <div class="field"><label>Porta</label>
+                  <input type="number" data-cfg="port" value="${esc(c.port || "")}" /></div>
+              </div>
+              <div class="field"><label>TLS pin</label>
+                <input type="text" data-cfg="tlsPin" value="${esc(c.tlsPin || "")}" />
+                <div class="hint">Impressão digital do certificado do nó. Necessária para conexões remotas.</div>
+              </div>
+              <div class="row">
+                <div class="field"><label>Dono do espaço (owner)</label>
+                  <input type="text" data-cfg="owner" value="${esc(c.owner || "")}" /></div>
+                <div class="field"><label>Pasta dos artigos</label>
+                  <input type="text" data-cfg="articlesPath" value="${esc(c.articlesPath || "")}" /></div>
+              </div>
+            </fieldset>
+            <fieldset><legend>hdap-cli</legend>
+              <div class="field"><label>Origem do binário</label>
+                <select data-cfg="mode">
+                  <option value="default" ${c.mode !== "local" ? "selected" : ""}>Usar o hdap-cli que acompanha o projeto</option>
+                  <option value="local" ${c.mode === "local" ? "selected" : ""}>Usar um hdap-cli na minha máquina</option>
+                </select>
+              </div>
+              <div class="field"><label>Caminho do hdap-cli (opcional)</label>
+                <input type="text" data-cfg="cliPath" value="${esc(c.cliPath || "")}" placeholder="/usr/local/bin/hdap-cli" />
+                <div class="hint">Deixe vazio para detectar automaticamente (pasta <code>bin/</code> do projeto, PATH ou variável HDAP_CLI).</div>
+              </div>
+            </fieldset>
+            <fieldset><legend>Publicação</legend>
+              <label class="check" style="margin-bottom:.6rem">
+                <input type="checkbox" data-cfg="enabled" ${c.enabled ? "checked" : ""}/> Integração HDAP ativa
+              </label>
+              <label class="check" style="margin-bottom:.6rem">
+                <input type="checkbox" data-cfg="autoPublish" ${c.autoPublish ? "checked" : ""}/> Publicar automaticamente ao criar/editar posts no BloggySource
+              </label>
+              <div class="field" style="margin-top:.6rem"><label>Link do BloggySource (opcional)</label>
+                <input type="text" data-cfg="bloggysourceUrl" value="${esc(c.bloggysourceUrl || "")}" placeholder="vazio = /blog.html local" />
+              </div>
+            </fieldset>
+            ${statusHtml(s)}
+            <div class="actions">
+              <button class="btn primary" id="saveCfg">Salvar configuração</button>
+              <button class="btn" id="testCfg">Testar conexão</button>
+              <button class="btn" id="syncCfg">Sincronizar todos os posts → HDAP</button>
+            </div>
+          `;
+        } else if (state.settingsTab === "identity") {
+          body.innerHTML = `
+            <fieldset><legend>Identidade local (cofre)</legend>
+              <p class="hint" style="margin-top:0">Esta identidade é criada e registrada automaticamente no primeiro uso. Ela fica em <code>data/identity</code> e não é enviada a lugar nenhum. É ela que assina as leituras e publicações.</p>
+              <div class="row">
+                <div class="field"><label>Apelido (nickname)</label>
+                  <input type="text" data-cfg="nickname" value="${esc(c.nickname || "")}" /></div>
+                <div class="field"><label>Frase secreta (passphrase)</label>
+                  <input type="text" data-cfg="passphrase" value="${esc(c.passphrase || "")}" /></div>
+              </div>
+              <div class="field"><label>Pasta do cofre (opcional)</label>
+                <input type="text" data-cfg="identityHome" value="${esc(c.identityHome || "")}" placeholder="vazio = data/identity" /></div>
+              <div class="field"><label>ID público</label>
+                <div class="status-box" id="idBox">${
+                  s && s.identity && s.identity.id
+                    ? `<span class="ok">${esc(s.identity.id)}</span>`
+                    : "ainda não gerado — use “Preparar identidade”"
+                }</div>
+                <div class="hint">Compartilhe este ID com quem controla o espaço para receber permissão de escrita.</div>
+              </div>
+            </fieldset>
+            ${statusHtml(s)}
+            <div class="actions">
+              <button class="btn primary" id="saveCfg">Salvar configuração</button>
+              <button class="btn" id="setupId">Preparar identidade</button>
+              <button class="btn" id="testCfg">Testar conexão</button>
+            </div>
+          `;
+        } else if (state.settingsTab === "appearance") {
+          body.innerHTML = `
+            <fieldset><legend>Leitor</legend>
+              <div class="field"><label>Título do site</label>
+                <input type="text" data-cfg="siteTitle" value="${esc(c.siteTitle || "")}" /></div>
+              <div class="field"><label>Descrição</label>
+                <input type="text" data-cfg="siteDescription" value="${esc(c.siteDescription || "")}" /></div>
+              <div class="field"><label>Idioma</label>
+                <input type="text" data-cfg="language" value="${esc(c.language || "pt")}" /></div>
+            </fieldset>
+            <div class="actions">
+              <button class="btn primary" id="saveCfg">Salvar configuração</button>
+            </div>
+          `;
+        } else {
+          body.innerHTML = `
+            <fieldset><legend>Avançado</legend>
+              <div class="field"><label>Cache da listagem (ms)</label>
+                <input type="number" data-cfg="cacheTtlMs" value="${esc(c.cacheTtlMs || 0)}" />
+                <div class="hint">Tempo que a lista de artigos fica em memória antes de baixar de novo (padrão 300000 = 5 min).</div>
+              </div>
+            </fieldset>
+            <div class="actions">
+              <button class="btn primary" id="saveCfg">Salvar configuração</button>
+              <button class="btn" id="syncCfg">Sincronizar todos os posts → HDAP</button>
+            </div>
+          `;
+        }
+        wireSettings();
+      }
+
+      function statusHtml(s) {
+        if (state.statusError) {
+          return `<div class="status-box"><span class="bad">${esc(
+            state.statusError,
+          )}</span></div>`;
+        }
+        if (!s) return "";
+        const node = s.node || {};
+        const id = s.identity || {};
+        const line = (k, v, ok) =>
+          `<span class="k">${esc(k)}</span>: <span class="${
+            ok === true ? "ok" : ok === false ? "bad" : "v"
+          }">${esc(v)}</span>`;
+        const rows = [
+          line("cli", s.cliPath || "?", s.cliAvailable),
+          line("nó", `${node.host}:${node.port}`, node.reachable),
+          node.serverId ? line("server_id", node.serverId) : null,
+          node.error ? line("erro", node.error, false) : null,
+          line("identidade", id.id || "(não gerada)", !!id.id),
+          line("cofre", id.home || "", null),
+          line("autenticado", s.authenticated ? "sim" : "não", !!s.authenticated),
+          line("artigos", `${s.articlesPath} @ ${s.owner}`),
+        ].filter(Boolean);
+        return `<fieldset><legend>Diagnóstico</legend><div class="status-box">${rows.join(
+          "\n",
+        )}</div></fieldset>`;
+      }
+
+      function collectCfg() {
+        const patch = {};
+        $$("[data-cfg]").forEach((el) => {
+          const key = el.dataset.cfg;
+          if (el.type === "checkbox") patch[key] = el.checked;
+          else if (el.type === "number") patch[key] = parseInt(el.value, 10);
+          else patch[key] = el.value;
+        });
+        return patch;
+      }
+
+      function wireSettings() {
+        const save = $("#saveCfg");
+        if (save)
+          save.onclick = async () => {
+            save.disabled = true;
+            save.innerHTML = '<span class="spin-inline"></span> Salvando…';
+            try {
+              const r = await api("/api/hdap/config", {
+                method: "PUT",
+                body: JSON.stringify(collectCfg()),
+              });
+              state.config = r.config;
+              toast("Configuração salva", "", "ok");
+              await loadMeta();
+              save.disabled = false;
+              save.textContent = "Salvar configuração";
+              render();
+            } catch (err) {
+              toast("Falha ao salvar", err.message, "err");
+              save.disabled = false;
+              save.textContent = "Salvar configuração";
+            }
+          };
+        const test = $("#testCfg");
+        if (test)
+          test.onclick = async () => {
+            test.disabled = true;
+            test.innerHTML = '<span class="spin-inline"></span> Testando…';
+            try {
+              const r = await api("/api/hdap/test", { method: "POST" });
+              state.status = r.status;
+              state.statusError = null;
+              renderSettings();
+              const ok = r.status.node && r.status.node.reachable;
+              toast(
+                ok ? "Conexão OK" : "Nó inacessível",
+                ok
+                  ? `server_id: ${r.status.node.serverId || "?"}`
+                  : (r.status.node && r.status.node.error) || "",
+                ok ? "ok" : "err",
+              );
+            } catch (err) {
+              toast("Falha no teste", err.message, "err");
+              test.disabled = false;
+              test.textContent = "Testar conexão";
+            }
+          };
+        const setup = $("#setupId");
+        if (setup)
+          setup.onclick = async () => {
+            setup.disabled = true;
+            setup.innerHTML = '<span class="spin-inline"></span> Preparando…';
+            try {
+              const r = await api("/api/hdap/setup", {
+                method: "POST",
+                body: JSON.stringify({ force: true }),
+              });
+              toast(
+                "Identidade pronta",
+                r.id ? `ID: ${r.id}` : "registrada no nó",
+                "ok",
+              );
+              await openSettingsRefresh();
+            } catch (err) {
+              toast("Falha ao preparar", err.message, "err");
+              setup.disabled = false;
+              setup.textContent = "Preparar identidade";
+            }
+          };
+        const sync = $("#syncCfg");
+        if (sync)
+          sync.onclick = async () => {
+            if (
+              !confirm(
+                "Publicar TODOS os posts do BloggySource no HDAP? Isso pode levar um tempo.",
+              )
+            )
+              return;
+            sync.disabled = true;
+            sync.innerHTML = '<span class="spin-inline"></span> Sincronizando…';
+            try {
+              const r = await api("/api/hdap/sync", { method: "POST" });
+              toast("Sincronização concluída", r.message, "ok");
+              sync.disabled = false;
+              sync.textContent = "Sincronizar todos os posts → HDAP";
+              await loadArticles(true);
+            } catch (err) {
+              toast("Falha ao sincronizar", err.message, "err");
+              sync.disabled = false;
+              sync.textContent = "Sincronizar todos os posts → HDAP";
+            }
+          };
+      }
+
+      async function openSettingsRefresh() {
+        const [cfgRes, statusRes] = await Promise.all([
+          api("/api/hdap/config"),
+          api("/api/hdap/status").catch((e) => ({ error: e.message })),
+        ]);
+        state.config = cfgRes.config;
+        state.status = statusRes.status || null;
+        state.statusError = statusRes.error || null;
+        renderSettings();
+      }
+
+      /* ============================================================
+       * Carregamento de dados
+       * ============================================================ */
+      async function loadMeta() {
+        try {
+          state.meta = await api("/api/hdap/meta");
+        } catch (_) {
+          state.meta = state.meta || {};
+        }
+        if (state.meta && state.meta.bloggysourceUrl) {
+          $("#btnBloggy").href = state.meta.bloggysourceUrl;
+        }
+        if (state.meta && state.meta.siteTitle) {
+          document.title = state.meta.siteTitle + " — HDAP";
+        }
+      }
+
+      async function loadArticles(refresh = false) {
+        state.loading = true;
+        state.error = null;
+        render();
+        try {
+          const r = await api(
+            "/api/hdap/articles" + (refresh ? "?refresh=1" : ""),
+          );
+          state.articles = r.articles || [];
+        } catch (err) {
+          state.error = err.message;
+          state.articles = [];
+        } finally {
+          state.loading = false;
+          render();
+        }
+      }
+
+      async function loadSession() {
+        try {
+          state.csrfToken = (await api("/api/csrf-token")).csrfToken || "";
+        } catch (_) {}
+        try {
+          const me = await api("/api/me");
+          state.user = me.user;
+        } catch (_) {
+          state.user = null;
+        }
+        const admin = state.user && state.user.isAdmin;
+        $("#btnNew").classList.toggle("hide", !admin);
+        $("#btnSettings").classList.toggle("hide", !admin);
+      }
+
+      async function refreshStatusQuietly() {
+        if (!(state.user && state.user.isAdmin)) return;
+        try {
+          const r = await api("/api/hdap/status");
+          state.status = r.status;
+          renderHero();
+        } catch (_) {}
+      }
+
+      /* ============================================================
+       * Eventos
+       * ============================================================ */
+      function bind() {
+        $("#searchInput").addEventListener("input", (e) => {
+          state.filter = e.target.value;
+          renderList();
+        });
+        $("#chips").addEventListener("click", (e) => {
+          const chip = e.target.closest(".chip");
+          if (!chip) return;
+          state.category = chip.dataset.cat || null;
+          renderChips();
+          renderList();
+        });
+        $("#content").addEventListener("click", (e) => {
+          if (e.target.closest('[data-act="reload"]')) {
+            loadArticles(true);
+            return;
+          }
+          const card = e.target.closest(".card");
+          if (card) openArticle(parseInt(card.dataset.idx, 10));
+        });
+        $("#btnRefresh").onclick = () => {
+          toast("Atualizando", "Buscando artigos na rede HDAP…");
+          loadArticles(true);
+        };
+        $("#btnNew").onclick = () => openEditor(null);
+        $("#btnSettings").onclick = () => openSettings();
+        document.addEventListener("click", (e) => {
+          if (e.target.closest("[data-close]")) closeModal();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeModal();
+        });
+      }
+
+      /* ============================================================
+       * Boot
+       * ============================================================ */
+      (async function boot() {
+        bind();
+        $("#footRight").textContent =
+          "leitura e publicação via hdap-cli · " + new Date().getFullYear();
+        await loadMeta();
+        await loadSession();
+        await loadArticles(false);
+        refreshStatusQuietly();
+      })();
+    </script>
+  </body>
+</html>

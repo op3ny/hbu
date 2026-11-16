@@ -1,0 +1,25 @@
+# Dependências
+node_modules/
+
+# Banco de dados local (posts, usuários, sessões)
+db/
+*.db
+*.sqlite
+
+# Dados locais do HDAP (config, cofre/identidade, cache)
+data/
+
+# Binário do hdap-cli (baixe o seu; veja o README)
+bin/
+hdap-cli
+hdap-cli.exe
+
+# Cookies e backups locais
+cookies.txt
+*.bak
+*.bak-*
+
+# Logs e arquivos do sistema
+*.log
+.DS_Store
+Thumbs.db

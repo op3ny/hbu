@@ -1,0 +1,27 @@
+{
+  "name": "hbu",
+  "version": "1.0.0",
+  "description": "HBU — Hdap Blog Utility: leitor e publicador de artigos para a rede HDAP, integrado ao BloggySource.",
+  "main": "index.js",
+  "scripts": {
+    "main": "node index.js",
+    "start": "node index.js"
+  },
+  "author": "op3ny",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-sqlite3": "^0.9.15",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "csrf": "^3.1.0",
+    "csurf": "^1.11.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.1.0"
+  }
+}

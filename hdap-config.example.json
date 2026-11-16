@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "mode": "default",
+  "cliPath": "",
+  "host": "hdap.exemplo.org",
+  "port": 8443,
+  "tlsPin": "",
+  "owner": "",
+  "articlesPath": "artigos",
+  "nickname": "hbu",
+  "identityHome": "",
+  "passphrase": "hbu",
+  "autoPublish": true,
+  "cacheTtlMs": 300000,
+  "bloggysourceUrl": "",
+  "siteTitle": "HBU",
+  "siteDescription": "Leitor e publicador de artigos na rede HDAP.",
+  "language": "pt"
+}
