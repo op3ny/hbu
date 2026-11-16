@@ -178,3 +178,7 @@ gravar o cookie esperado. Detalhes no cabeçalho de `requireCaptcha.js`.
 | Lista vazia mas o nó responde | `owner` ou `articlesPath` errados | confira os dois em Configurações |
 | Publicação não acontece | publicação automática desligada | ligue em Configurações ou use **Sincronizar** |
 | Login pede CAPTCHA | CAPTCHA ligado | use `BLOGGY_DISABLE_CAPTCHA=1` localmente |
+
+---
+
+Feito com <3 pela [Thaís (op3n/op3ny)](https://github.com/op3ny)

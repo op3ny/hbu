@@ -206,3 +206,7 @@ Mais detalhes em [`docs/HDAP.md`](./docs/HDAP.md).
 
 MIT. Construído sobre o **BloggySource** e o protocolo **HDAP**
 ([Hsyst-Eleuthery/hdap](https://github.com/Hsyst-Eleuthery/hdap)).
+
+---
+
+Feito com <3 pela [Thaís (op3n/op3ny)](https://github.com/op3ny)
